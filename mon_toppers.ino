@@ -107,21 +107,10 @@ int C_tcb(int argc, char **argv)   // TCBの状態表示
   return 0;
 }
 
-int C_task1(int argc, char **argv)   // task1制御
+
+int mon_RegistCMD(void)     // TOPPERSモニタコマンドの登録
 {
-  if (argc>1) {
-    task1_flag = gg_asc2int(argv[1]);
-  }
-  gg_printf("task1_flag = %d\n", task1_flag);
+  GG_CON_CMDADD(C_os,     "os",     "[...]", "explore the current status of TOPPERS" );
+  GG_CON_CMDADD(C_tcb,    "tcb",    "[...]", "explore the TCB" );
   return 0;
 }
-
-int C_task2(int argc, char **argv)   // task2制御
-{
-  if (argc>1) {
-    task2_flag = gg_asc2int(argv[1]);
-  }
-  gg_printf("task2_flag = %d\n", task2_flag);
-  return 0;
-}
-
