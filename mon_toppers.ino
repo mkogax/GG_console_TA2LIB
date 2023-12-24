@@ -60,6 +60,15 @@ extern TCB	tcb_table[];
 #define get_tcb(tskid)		(&(tcb_table[INDEX_TSK(tskid)]))
 #define get_tcb_self(tskid)	((tskid) == TSK_SELF ? p_runtsk : get_tcb(tskid))
 
+#define kmmsz						_kernel_kmmsz
+#define kmm							_kernel_kmm
+extern const SIZE		kmmsz;    // kernel_cfg.c
+extern MB_T *const		kmm;    // kernel_cfg.c
+
+extern "C" {
+#define kernel_malloc				_kernel_kernel_malloc
+extern void *kernel_malloc(SIZE size);
+}
 
 /*
   --------------------------------------
@@ -67,21 +76,47 @@ extern TCB	tcb_table[];
   --------------------------------------
 */
 
-int C_os(int argc, char **argv)   // TOPPERSの状態表示
+int C_inf(int argc, char **argv)   // TOPPERSの設定情報
 {
-  
-
+  gg_printf("-- TOPPERS設定情報 --\n");
+  gg_printf("[バージョン(TKERNEL_)]\n");
+  gg_printf(" 0x%04X(MAKER) 0x%04X(PRID) 0x%04X(SPVER) 0x%04X(PRVER)\n",
+        TKERNEL_MAKER,    /* カーネルのメーカーコード */
+        TKERNEL_PRID,     /* カーネルの識別番号 */
+        TKERNEL_SPVER,    /* カーネル仕様のバージョン番号 */
+        TKERNEL_PRVER);   /* カーネルのバージョン番号 */
+  gg_printf("[最大登録数(TNUM_)]\n");
+  gg_printf(" %d(TSKID) %d(SEMID) %d(FLGSID) %d(DTQID) %d(PDQID) %d(MBXID) %d(MPFID) %d(CYCID) %d(ALMID) %d(ISRID)\n",
+        TNUM_TSKID,         /* タスクの数 */
+        TNUM_SEMID,         /* セマフォの数 */
+        TNUM_FLGID,         /* イベントフラグ */
+        TNUM_DTQID,         /* データキュー */
+        TNUM_PDQID,         /* 優先度データキュー */
+        TNUM_MBXID,         /* メールボックス */
+        TNUM_MPFID,         /* 固定長メモリプール */
+        TNUM_CYCID,         /* 周期ハンドラ */
+        TNUM_ALMID,         /* アラームハンドラ */
+        TNUM_ISRID);        /* 割込みサービスルーチン */
   return 0;
 }
 
-int C_tcb(int argc, char **argv)   // TCBの状態表示
+int C_sts(int argc, char **argv)    // TOPPERSの状態表示
 {
+  uint8_t *kmm_brk = (uint8_t *)kernel_malloc(0);   // 現在のシステムメモリ消費位置
   int i;
+  gg_printf("-- TOPPERS状態 --\n");
+  gg_printf("[システムメモリ]\n");
+  gg_printf(" size=0x%08lX(kmmsz) top=0x%08lX(kmm) brk=0x%08lX(kmm_brk) 残り=0x%08lX(brk-kmm)\n",
+        kmmsz,
+        kmm,
+        kmm_brk,
+        kmm_brk-(uint8_t *)kmm);
+  gg_printf("[タスク]\n");
   for (i=0; i<TNUM_TSKID; i++) {    // 未定義も含めて登録可能なタスク数を全部リストする
     int id = i+TMIN_TSKID;
     TCB *tcb = get_tcb(id);
     int ts = tcb->tstat;
-    gg_printf("[%2d] TCB=0x%08lX ts=0x%02X", id, tcb, ts);
+    gg_printf("%3d TCB=0x%08lX ts=0x%02X", id, tcb, ts);
     gg_printf("(%c%c%c ", (ts&1)?'R':'-', (ts&2)?'W':'-', (ts&4)?'S':'-');
     if (ts&6) {
       switch(ts>>3) {
@@ -110,7 +145,8 @@ int C_tcb(int argc, char **argv)   // TCBの状態表示
 
 int mon_RegistCMD(void)     // TOPPERSモニタコマンドの登録
 {
-  GG_CON_CMDADD(C_os,     "os",     "[...]", "explore the current status of TOPPERS" );
-  GG_CON_CMDADD(C_tcb,    "tcb",    "[...]", "explore the TCB" );
+	GG_CON_CMDMRK("-- TOPPERS --");			// 区切り行（helpでコマンド一覧のときに表示）
+  GG_CON_CMDADD(C_inf,    "inf",    "",       "設定情報" );
+  GG_CON_CMDADD(C_sts,    "sts",    "",       "状態" );
   return 0;
 }

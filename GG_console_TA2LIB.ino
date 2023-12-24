@@ -165,6 +165,7 @@ int C_dummy(int argc, char **argv)   // ダミー負荷制御(0=ループ処理,
 
 int task_RegistCMD(void)            // task制御コマンドの登録
 {
+	GG_CON_CMDMRK("-- TASK --");			// 区切り行（helpでコマンド一覧のときに表示）
   GG_CON_CMDADD(C_task1,  "task1",  "[...]", "control task1" );
   GG_CON_CMDADD(C_task2,  "task2",  "[...]", "control task2" );
   GG_CON_CMDADD(C_dummy,  "dummy",  "[...]", "control dummy" );
